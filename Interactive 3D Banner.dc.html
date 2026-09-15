@@ -79,6 +79,12 @@
             <circle cx="{{ p.cx }}" cy="{{ p.cy }}" r="{{ p.dotR }}" fill="{{ p.dotColor }}" opacity="{{ p.dotOpacity }}" style="pointer-events:none;"></circle>
           </sc-for>
         </g>
+        <sc-if value="{{ seas }}" hint-placeholder-val="{{ false }}">
+          <g pointer-events="none">
+            <text x="{{ seas.caspian.x }}" y="{{ seas.caspian.y }}" dx="50" dy="-60" text-anchor="middle" fill="#5ec8ef" font-size="15" font-family="system-ui,Tahoma,sans-serif" font-weight="600" letter-spacing="0.5" opacity=".9" style="text-shadow:0 0 6px rgba(94,200,239,.6);">دریای خزر</text>
+            <text x="{{ seas.gulf.x }}" y="{{ seas.gulf.y }}" dx="50" dy="30" text-anchor="middle" fill="#5ec8ef" font-size="15" font-family="system-ui,Tahoma,sans-serif" font-weight="600" letter-spacing="0.5" opacity=".9" style="text-shadow:0 0 6px rgba(94,200,239,.6);">خلیج فارس</text>
+          </g>
+        </sc-if>
       </sc-if>
     </svg>
 
@@ -150,7 +156,7 @@ function hashRange(str, min, max) {
 }
 
 class Component extends DCLogic {
-  state = { ready: false, provinces: [], selectedId: null, hoveredId: null };
+  state = { ready: false, provinces: [], selectedId: null, hoveredId: null, seaLabels: null };
 
   componentDidMount() {
     this.loadMap();
@@ -167,6 +173,12 @@ class Component extends DCLogic {
     const geo = window.topojson.feature(topo, topo.objects.iran);
     const projection = window.d3.geoMercator().fitExtent([[24, 24], [976, 776]], geo);
     const path = window.d3.geoPath(projection);
+    const caspian = projection([50.3, 37.8]);
+    const gulf = projection([52.5, 26.5]);
+    this.seaLabels = {
+      caspian: { x: caspian[0], y: caspian[1] },
+      gulf: { x: gulf[0], y: gulf[1] }
+    };
 
     const provinces = geo.features.map((f) => {
       const id = f.id.replace('IR.', '');
@@ -190,7 +202,7 @@ class Component extends DCLogic {
       };
     });
 
-    this.setState({ ready: true, provinces }, () => this.playIntro());
+    this.setState({ ready: true, provinces, seaLabels: this.seaLabels }, () => this.playIntro());
   }
 
   selectProvince(id) {
@@ -289,6 +301,7 @@ class Component extends DCLogic {
     return {
       ready: this.state.ready,
       provinces,
+      seas: this.state.seaLabels,
       selected,
       hoverTip,
       closeSelected: () => this.closeSelected(),
